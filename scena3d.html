@@ -242,6 +242,28 @@
             new THREE.PointsMaterial({ color: 0x888877, size: 0.15 })
         );
         scene.add(asteroidMesh);
+    
+        // Cometa
+        const cometPivot = new THREE.Object3D();
+        scene.add(cometPivot);
+
+        const cometMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(0.5, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xffffff })
+        );
+        cometMesh.position.x = 90;
+        cometPivot.add(cometMesh);
+
+        // Coada cometei - particule
+        const coadaGeo = new THREE.BufferGeometry();
+        const coadaPos = new Float32Array(200 * 3);
+        const coadaGeo2 = new THREE.BufferAttribute(coadaPos, 3);
+        coadaGeo.setAttribute('position', coadaGeo2);
+    
+        const coada1 = new THREE.Points(coadaGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.15, transparent: true, opacity: 0.8, depthWrite: false }));
+        const coada2 = new THREE.Points(coadaGeo, new THREE.PointsMaterial({ color: 0xaaddff, size: 0.2, transparent: true, opacity: 0.4, depthWrite: false }));
+        const coada3 = new THREE.Points(coadaGeo, new THREE.PointsMaterial({ color: 0x4488ff, size: 0.3, transparent: true, opacity: 0.15, depthWrite: false }));
+        scene.add(coada1, coada2, coada3);
 
         // Animatie
         function animate() {
@@ -264,6 +286,24 @@
                 aPos[i * 3 + 2] = Math.sin(asteroidAngles[i]) * asteroidRadii[i];
             }
             asteroidGeo.attributes.position.needsUpdate = true;
+
+            // Cometa
+            cometPivot.rotation.y += 0.003;
+            cometPivot.rotation.x += 0.0005; // orbita inclinata
+
+            const cometPos = new THREE.Vector3();
+            cometMesh.getWorldPosition(cometPos);
+
+            const coadaArr = coadaGeo.attributes.position.array;
+            for (let i = 199; i > 0; i--) {
+                coadaArr[i * 3] = coadaArr[(i - 1) * 3];
+                coadaArr[i * 3 + 1] = coadaArr[(i - 1) * 3 + 1];
+                coadaArr[i * 3 + 2] = coadaArr[(i - 1) * 3 + 2];
+            }
+            coadaArr[0] = cometPos.x;
+            coadaArr[1] = cometPos.y;
+            coadaArr[2] = cometPos.z;
+            coadaGeo.attributes.position.needsUpdate = true;
 
             renderer.render(scene, camera);
         }
