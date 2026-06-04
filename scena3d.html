@@ -66,10 +66,10 @@
         scene.add(ambient);
 
         const sunGeo = new THREE.SphereGeometry(5, 64, 64);
-        const sunMat = new THREE.MeshStandardMaterial({
-            color: 0xffaa00,
-            emissive: 0xff6600,
-            emissiveIntensity: 1.8
+        const textureLoader = new THREE.TextureLoader();
+
+        const sunMat = new THREE.MeshBasicMaterial({
+            map: textureLoader.load('poze planete/2k_sun.jpg')
         });
         const sun = new THREE.Mesh(sunGeo, sunMat);
         scene.add(sun);
@@ -80,8 +80,9 @@
 
         const earthGeo = new THREE.SphereGeometry(1, 48, 48);
         const earthMat = new THREE.MeshStandardMaterial({
-            color: 0x2e86de,
-            roughness: 0.5
+            map: textureLoader.load('poze planete/2k_earth_daymap.jpg'),
+            roughness: 0.7,
+            metalness: 0.0
         });
         const earth = new THREE.Mesh(earthGeo, earthMat);
         earth.position.x = 19; // distanta fata de soare
@@ -90,11 +91,9 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // Pamantul orbiteaza in jurul soarelui
-            pivot.rotation.y += 0.005;
-
-            // Soarele se roteste pe loc
-            sun.rotation.y += 0.003;
+            pivot.rotation.y += 0.002;
+            earth.rotation.y += 0.005;
+            sun.rotation.y += 0.001;
 
             renderer.render(scene, camera);
         }
