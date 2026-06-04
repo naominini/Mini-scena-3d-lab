@@ -1,4 +1,3 @@
-# Mini-scena-3d-lab
 # Sistem Solar 3D
 
 Scenă 3D interactivă a sistemului solar realizată cu **Three.js** (WebGL)
