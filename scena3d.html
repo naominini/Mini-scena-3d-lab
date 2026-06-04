@@ -5,6 +5,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Solar 3D</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
@@ -21,7 +37,69 @@
 
     <script type="module">
         import * as THREE from 'three';
-        console.log("Three.js încărcat:", THREE.REVISION);
+        // Renderer
+        const canvas = document.getElementById('scena');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Scena
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020408); // negru-albastru
+
+        // Camera
+        const camera = new THREE.PerspectiveCamera(
+            50,                          // unghi de vedere
+            window.innerWidth / window.innerHeight,  // aspect ratio
+            0.1,                         // near
+            2000                         // far
+        );
+        camera.position.set(0, 15, 60);
+        camera.lookAt(0, 0, 0);
+
+        // Lumina soarelui (din centru)
+        const sunLight = new THREE.PointLight(0xfff5cc, 3.5, 600);
+        scene.add(sunLight);
+
+        // Lumină ambientala (umple umbrele)
+        const ambient = new THREE.AmbientLight(0x112244, 0.4);
+        scene.add(ambient);
+
+        const sunGeo = new THREE.SphereGeometry(5, 64, 64);
+        const sunMat = new THREE.MeshStandardMaterial({
+            color: 0xffaa00,
+            emissive: 0xff6600,
+            emissiveIntensity: 1.8
+        });
+        const sun = new THREE.Mesh(sunGeo, sunMat);
+        scene.add(sun);
+
+        // Pivot = punct de rotatie in jurul soarelui
+        const pivot = new THREE.Object3D();
+        scene.add(pivot);
+
+        const earthGeo = new THREE.SphereGeometry(1, 48, 48);
+        const earthMat = new THREE.MeshStandardMaterial({
+            color: 0x2e86de,
+            roughness: 0.5
+        });
+        const earth = new THREE.Mesh(earthGeo, earthMat);
+        earth.position.x = 19; // distanta fata de soare
+        pivot.add(earth);
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Pamantul orbiteaza in jurul soarelui
+            pivot.rotation.y += 0.005;
+
+            // Soarele se roteste pe loc
+            sun.rotation.y += 0.003;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
     </script>
 </body>
 
