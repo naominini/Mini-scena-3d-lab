@@ -28,15 +28,17 @@
     <canvas id="scena"></canvas>
 
     <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js"
-  }
-}
+    {
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js",
+        "three/examples/jsm/controls/OrbitControls": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/controls/OrbitControls.js"
+        }
+    }
 </script>
 
     <script type="module">
         import * as THREE from 'three';
+        import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
         const canvas = document.getElementById('scena');
         const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -49,6 +51,12 @@
         camera.position.set(0, 40, 120);
         camera.lookAt(0, 0, 0);
 
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;       // miscare lina
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 20;           // zoom maxim aproape
+        controls.maxDistance = 300;          // zoom maxim departe
+
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -56,9 +64,9 @@
         });
 
         // Lumini
-        const sunLight = new THREE.PointLight(0xfff5cc, 3.5, 600);
+        const sunLight = new THREE.PointLight(0xfff5cc, 2.0, 400);
         scene.add(sunLight);
-        scene.add(new THREE.AmbientLight(0x112244, 0.4));
+        scene.add(new THREE.AmbientLight(0x223355, 2.5));
 
         // Texture loader
         const tl = new THREE.TextureLoader();
@@ -105,11 +113,11 @@
         const planete = [
             { nume: 'Mercur', tex: '2k_mercury.jpg', raza: 0.38, dist: 10, viteza: 0.008 },
             { nume: 'Venus', tex: '2k_venus_surface.jpg', raza: 0.9, dist: 15, viteza: 0.006 },
-            { nume: 'Pamant', tex: '2k_earth_daymap.jpg', raza: 1.0, dist: 21, viteza: 0.004 },
+            { nume: 'Pamant', tex: '2k_earth_daymap.jpg', raza: 1.0, dist: 21, viteza: 0.004, areLuna: true },
             { nume: 'Marte', tex: '2k_mars.jpg', raza: 0.55, dist: 28, viteza: 0.003 },
             { nume: 'Jupiter', tex: '2k_jupiter.jpg', raza: 2.5, dist: 40, viteza: 0.002 },
             { nume: 'Saturn', tex: '2k_saturn.jpg', raza: 2.1, dist: 54, viteza: 0.0015 },
-            { nume: 'Uranus', tex: '2k_uranus.jpg', raza: 1.5, dist: 66, viteza: 0.001 },
+            { nume: 'Uranus', tex: '2k_uranus.jpg', raza: 1.5, dist: 66, viteza: 0.001, color: 0x99cccc },
             { nume: 'Neptun', tex: '2k_neptune.jpg', raza: 1.4, dist: 78, viteza: 0.0008 },
         ];
 
@@ -126,7 +134,8 @@
                 new THREE.SphereGeometry(p.raza, 48, 48),
                 new THREE.MeshStandardMaterial({
                     map: tl.load('poze planete/' + p.tex),
-                    roughness: 0.7,
+                    color: p.color || 0xffffff,
+                    roughness: 2.0,
                     metalness: 0.0
                 })
             );
@@ -164,11 +173,32 @@
                 mesh.add(ring);
             }
             pivoturi.push({ pivot, mesh, viteza: p.viteza });
+
+            // Luna dupa pamant
+            if (p.areLuna) {
+                const lunaPivot = new THREE.Object3D();
+                mesh.add(lunaPivot); // atașat la Pamant
+
+                const luna = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.27, 32, 32),
+                    new THREE.MeshStandardMaterial({
+                        map: tl.load('poze planete/2k_moon.jpg'),
+                        roughness: 1.0,
+                        metalness: 0.0
+                    })
+                );
+                luna.position.x = 2.5; // distanta fata de Pamant
+                lunaPivot.add(luna);
+
+                pivoturi.push({ pivot: lunaPivot, mesh: luna, viteza: 0.02 }); // viteza orbita luna
+            }
         });
 
         // Animatie
         function animate() {
             requestAnimationFrame(animate);
+
+            controls.update();
 
             sun.rotation.y += 0.001;
 
