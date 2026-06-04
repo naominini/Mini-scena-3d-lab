@@ -214,6 +214,34 @@
                 pivoturi.push({ pivot: lunaPivot, mesh: luna, viteza: 0.02 }); // viteza orbita luna
             }
         });
+    
+        // Centura de asteroizi
+        const asteroidGeo = new THREE.BufferGeometry();
+        const asteroidPos = new Float32Array(800 * 3);
+        const asteroidAngles = new Float32Array(800);
+        const asteroidSpeeds = new Float32Array(800);
+        const asteroidRadii = new Float32Array(800);
+
+        for (let i = 0; i < 800; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 33 + Math.random() * 5; // intre Marte si Jupiter
+            const y = (Math.random() - 0.5) * 1.5;
+
+            asteroidAngles[i] = angle;
+            asteroidSpeeds[i] = 0.0015 + Math.random() * 0.001;
+            asteroidRadii[i] = dist;
+
+            asteroidPos[i * 3] = Math.cos(angle) * dist;
+            asteroidPos[i * 3 + 1] = y;
+            asteroidPos[i * 3 + 2] = Math.sin(angle) * dist;
+        }
+
+        asteroidGeo.setAttribute('position', new THREE.BufferAttribute(asteroidPos, 3));
+        const asteroidMesh = new THREE.Points(
+            asteroidGeo,
+            new THREE.PointsMaterial({ color: 0x888877, size: 0.15 })
+        );
+        scene.add(asteroidMesh);
 
         // Animatie
         function animate() {
@@ -227,6 +255,15 @@
                 p.pivot.rotation.y += p.viteza;
                 p.mesh.rotation.y += 0.005;
             });
+
+            // Asteroizi
+            const aPos = asteroidGeo.attributes.position.array;
+            for (let i = 0; i < 800; i++) {
+                asteroidAngles[i] += asteroidSpeeds[i];
+                aPos[i * 3] = Math.cos(asteroidAngles[i]) * asteroidRadii[i];
+                aPos[i * 3 + 2] = Math.sin(asteroidAngles[i]) * asteroidRadii[i];
+            }
+            asteroidGeo.attributes.position.needsUpdate = true;
 
             renderer.render(scene, camera);
         }
