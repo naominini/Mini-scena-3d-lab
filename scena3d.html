@@ -20,12 +20,117 @@
         canvas {
             display: block;
         }
+
+        #panel {
+            position: fixed;
+            left: -160px; /* ascuns by default */
+            top: 0;
+            height: 100%;
+            width: 160px;
+            background: rgba(0, 10, 30, 0.75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 10px;
+            gap: 8px;
+            z-index: 10;
+            transition: left 0.3s ease; /* animatie slide */
+        }
+
+        #panel.deschis {
+            left: 0;
+        }
+
+        #togglePanel {
+            position: fixed;
+            left: 10px;
+            top: 10px;
+            z-index: 20;
+            background: rgba(0, 10, 30, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: left 0.3s ease;
+        }
+
+        #togglePanel.deschis {
+            left: 170px; /* se muta odata cu panoul */
+        }       
+
+        #panel h3 {
+            color: #aaccff;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-family: sans-serif;
+            text-align: center;
+        }
+
+        .btn-planeta {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: sans-serif;
+            text-align: left;
+            transition: background 0.2s;
+        }
+
+        .btn-planeta:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .btn-planeta.activ {
+            background: rgba(50, 150, 255, 0.3);
+            border-color: rgba(50, 150, 255, 0.6);
+        }
+
+        #btnElibereaza {
+            margin-top: auto;
+            background: rgba(255, 80, 80, 0.15);
+            border: 1px solid rgba(255, 80, 80, 0.3);
+            color: #ff9999;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-family: sans-serif;
+            transition: background 0.2s;
+        }
+
+        #btnElibereaza:hover {
+            background: rgba(255, 80, 80, 0.3);
+        }
     </style>
 </head>
 
 <body>
 
     <canvas id="scena"></canvas>
+    <div id="panel">
+        <h3>Planete</h3>
+        <button class="btn-planeta" data-index="-1">☀️ Soare</button>
+        <button class="btn-planeta" data-index="0">🪨 Mercur</button>
+        <button class="btn-planeta" data-index="1">🌕 Venus</button>
+        <button class="btn-planeta" data-index="2">🌍 Pamant</button>
+        <button class="btn-planeta" data-index="3">🌙 Luna</button>
+        <button class="btn-planeta" data-index="4">🔴 Marte</button>
+        <button class="btn-planeta" data-index="5">🪐 Jupiter</button>
+        <button class="btn-planeta" data-index="6">💍 Saturn</button>
+        <button class="btn-planeta" data-index="7">🔵 Uranus</button>
+        <button class="btn-planeta" data-index="8">🔵 Neptun</button>
+        <button id="btnElibereaza">Reset</button>
+    </div>
+    <button id="togglePanel">☰</button>
 
     <script type="importmap">
     {
@@ -211,7 +316,7 @@
                 luna.position.x = 2.5; // distanta fata de Pamant
                 lunaPivot.add(luna);
 
-                pivoturi.push({ pivot: lunaPivot, mesh: luna, viteza: 0.02 }); // viteza orbita luna
+                pivoturi.splice(3, 0, { pivot: lunaPivot, mesh: luna, viteza: 0.02 }); // viteza orbita luna
             }
         });
     
@@ -264,6 +369,51 @@
         const coada2 = new THREE.Points(coadaGeo, new THREE.PointsMaterial({ color: 0xaaddff, size: 0.2, transparent: true, opacity: 0.4, depthWrite: false }));
         const coada3 = new THREE.Points(coadaGeo, new THREE.PointsMaterial({ color: 0x4488ff, size: 0.3, transparent: true, opacity: 0.15, depthWrite: false }));
         scene.add(coada1, coada2, coada3);
+    
+        // Focus camera pe planeta
+        let targetPosition = null;
+        let targetLookAt = null;
+        let focusActive = false;
+    
+        function focusPePlaneta(index) {
+            document.querySelectorAll('.btn-planeta').forEach(b => b.classList.remove('activ'));
+            document.querySelector(`[data-index="${index}"]`).classList.add('activ');
+            focusActive = true;
+
+            if (index === -1) {
+                targetPosition = new THREE.Vector3(0, 15, 30);
+                targetLookAt = new THREE.Vector3(0, 0, 0);
+                return;
+            }
+
+            const pos = new THREE.Vector3();
+            pivoturi[index].mesh.getWorldPosition(pos);
+
+            // Luna are raza mai mica
+            const raza = index === 3 ? 0.27 : planete[index < 3 ? index : index - 1].raza;
+            targetPosition = new THREE.Vector3(pos.x + raza * 6, pos.y + raza * 3, pos.z + raza * 6);
+            targetLookAt = pos.clone();
+        }
+
+        document.querySelectorAll('.btn-planeta').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.index);
+                focusPePlaneta(index);
+            });
+        });
+    
+        const toggleBtn = document.getElementById('togglePanel');
+        const panel = document.getElementById('panel');
+
+        toggleBtn.addEventListener('click', () => {
+            panel.classList.toggle('deschis');
+            toggleBtn.classList.toggle('deschis');
+        });
+
+        document.getElementById('btnElibereaza').addEventListener('click', () => {
+            focusActive = false;
+            document.querySelectorAll('.btn-planeta').forEach(b => b.classList.remove('activ'));
+        });
 
         // Animatie
         function animate() {
@@ -304,6 +454,24 @@
             coadaArr[1] = cometPos.y;
             coadaArr[2] = cometPos.z;
             coadaGeo.attributes.position.needsUpdate = true;
+        
+            // Camera smooth focus
+            if (focusActive && targetPosition) {
+                const planeta = targetLookAt;
+
+                // Daca e planeta in miscare, updateaza pozitia tinta
+                const idx = parseInt(document.querySelector('.btn-planeta.activ')?.dataset.index);
+                if (idx >= 0 && pivoturi[idx]) {
+                    const pos = new THREE.Vector3();
+                    pivoturi[idx].mesh.getWorldPosition(pos);
+                    const raza = idx === 3 ? 0.27 : planete[idx < 3 ? idx : idx - 1].raza;
+                    targetPosition = new THREE.Vector3(pos.x + raza * 6, pos.y + raza * 3, pos.z + raza * 6);
+                    targetLookAt = pos.clone();
+                }
+
+                camera.position.lerp(targetPosition, 0.05); // smooth move
+                controls.target.lerp(targetLookAt, 0.05);   // smooth lookat
+            }
 
             renderer.render(scene, camera);
         }
