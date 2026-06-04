@@ -135,34 +135,34 @@
 
             // Inele Saturn
             if (p.nume === 'Saturn') {
-  const ringGeo = new THREE.RingGeometry(p.raza * 1.2, p.raza * 1.9, 64);
+                const ringGeo = new THREE.RingGeometry(p.raza * 1.2, p.raza * 1.9, 64);
 
-  // Fix UV-uri ca textura sa mearga de la interior la exterior
-  const pos = ringGeo.attributes.position;
-  const uv  = ringGeo.attributes.uv;
-  const innerR = p.raza * 1.2;
-  const outerR = p.raza * 1.9;
+                // Fix UV-uri ca textura sa mearga de la interior la exterior
+                const pos = ringGeo.attributes.position;
+                const uv = ringGeo.attributes.uv;
+                const innerR = p.raza * 1.2;
+                const outerR = p.raza * 1.9;
 
-  for (let i = 0; i < pos.count; i++) {
-    const v = new THREE.Vector3().fromBufferAttribute(pos, i);
-    const dist = v.length(); // distanta de la centru
-    const t = (dist - innerR) / (outerR - innerR); // 0 = interior, 1 = exterior
-    uv.setXY(i, t, 0.5); // textura se intinde de la stanga la dreapta
-  }
+                for (let i = 0; i < pos.count; i++) {
+                    const v = new THREE.Vector3().fromBufferAttribute(pos, i);
+                    const dist = v.length(); // distanta de la centru
+                    const t = (dist - innerR) / (outerR - innerR); // 0 = interior, 1 = exterior
+                    uv.setXY(i, t, 0.5); // textura se intinde de la stanga la dreapta
+                }
 
-  const ringMat = new THREE.MeshBasicMaterial({
-    map: tl.load('poze planete/2k_saturn_ring_alpha.png'),
-    side: THREE.DoubleSide,
-    transparent: true,
-    alphaMap: tl.load('poze planete/2k_saturn_ring_alpha.png'),
-    opacity: 1.0
-  });
+                const ringMat = new THREE.MeshBasicMaterial({
+                    map: tl.load('poze planete/2k_saturn_ring_alpha.png'),
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    alphaMap: tl.load('poze planete/2k_saturn_ring_alpha.png'),
+                    opacity: 1.0
+                });
 
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = Math.PI / 2;
-  ring.rotation.z = 0.45;
-  mesh.add(ring);
-}
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                ring.rotation.z = 0.45;
+                mesh.add(ring);
+            }
             pivoturi.push({ pivot, mesh, viteza: p.viteza });
         });
 
