@@ -1,0 +1,1 @@
+# Mini-scena-3d-lab
